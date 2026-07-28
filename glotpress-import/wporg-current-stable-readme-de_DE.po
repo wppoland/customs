@@ -1,8 +1,8 @@
-# Translation of Plugins - Customs &#8211; EU Import Duty for WooCommerce - Stable Readme (latest release) in German
-# This file is distributed under the same license as the Plugins - Customs &#8211; EU Import Duty for WooCommerce - Stable Readme (latest release) package.
+# Translation of Plugins - Customs, EU Import Duty for WooCommerce - Stable Readme (latest release) in German
+# This file is distributed under the same license as the Plugins - Customs, EU Import Duty for WooCommerce - Stable Readme (latest release) package.
 msgid ""
 msgstr ""
-"Project-Id-Version: Plugins - Customs &#8211; EU Import Duty for WooCommerce - Stable Readme (latest release)\n"
+"Project-Id-Version: Plugins - Customs, EU Import Duty for WooCommerce - Stable Readme (latest release)\n"
 "PO-Revision-Date: +0000\n"
 "Last-Translator: motylanogha <szatkowski.mariusz@gmail.com>\n"
 "Language-Team: German <de@li.org>\n"

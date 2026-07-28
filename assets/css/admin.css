@@ -1,12 +1,12 @@
 /*
- * Customs — admin settings screen styles.
+ * Customs, admin settings screen styles.
  *
  * Scoped entirely to the .customs-settings page wrapper so nothing leaks into
  * the rest of wp-admin or collides with admin colour schemes.
  *
  * Accent contrast (WCAG):
- *   Decorative accent  #2563eb  — borders, rules, lock glyphs (non-text).
- *   Button/text accent #1e40af  — used behind WHITE button text: 8.7:1 on
+ *   Decorative accent  #2563eb, borders, rules, lock glyphs (non-text).
+ *   Button/text accent #1e40af, used behind WHITE button text: 8.7:1 on
  *                                 white, clears AA (4.5:1) and AAA (7:1).
  */
 
@@ -25,7 +25,7 @@
 }
 
 /* ------------------------------------------------------------------ *
- * PRO upsell — dismissible banner, sidebar promo, "what PRO adds"
+ * PRO upsell, dismissible banner, sidebar promo, "what PRO adds"
  * locked cards. Coming-soon variant: soft CTA, no price, no buy button.
  * Pure advertising (no disabled inputs), scoped to .customs-settings.
  * ------------------------------------------------------------------ */
