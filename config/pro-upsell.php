@@ -11,14 +11,14 @@ defined('ABSPATH') || exit;
 
 return [
     'name'       => 'Customs Pro',
-    'url'        => 'https://plogins.com/plogins-customs-pro/pricing/',
+    'url'        => 'https://plogins.com/plogins-customs/',
     'sellable'   => false,
     'price_from' => 0,
     'currency'   => 'EUR',
     'price_pln'  => 0,
     'lead'       => [
-        'en' => 'Customs Pro is in preparation. The features below are planned after Customs FREE is approved on WordPress.org.',
-        'pl' => 'Customs Pro jest w przygotowaniu. Poniższe funkcje są planowane po akceptacji Customs FREE na WordPress.org.',
+        'en' => 'Customs Pro is in preparation. The features below are planned; the plugin page carries the announcement when they land.',
+        'pl' => 'Customs Pro jest w przygotowaniu. Poniższe funkcje są planowane, a informacja o ich wydaniu pojawi się na stronie wtyczki.',
     ],
     'features'   => [
         [
