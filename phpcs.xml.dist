@@ -3,6 +3,7 @@
     <description>WordPress Coding Standards - output escaping, nonces, redirects, and SQL placeholder safety. WordPress.org Plugin Check is the full compliance gate.</description>
 
     <file>customs.php</file>
+    <file>uninstall.php</file>
     <file>autoload.php</file>
     <file>src</file>
     <file>config</file>

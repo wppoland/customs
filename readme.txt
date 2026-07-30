@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,10 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.9 =
+* Removed the PRO notice from the settings screen. It advertised an edition that does not exist yet, so there was nothing behind it to click through to.
+* Added an uninstall routine: deleting the plugin now removes its settings, and the dismissal flag the removed notice left on user accounts.
 
 = 1.0.8 =
 * Fix: the PRO notice in the admin linked to a page that does not exist yet and returned a 404. It now points at the plugin page, and its wording no longer says the plans wait on a WordPress.org approval that has already happened.
