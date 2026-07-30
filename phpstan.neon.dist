@@ -5,6 +5,7 @@ parameters:
     level: 6
     paths:
         - customs.php
+        - uninstall.php
         - src
         - config
     excludePaths:

@@ -28,7 +28,6 @@ final class Settings implements HasHooks
     /** Settings page hook suffix, captured so we can scope assets to it. */
     private string $hookSuffix = '';
 
-    private ?ProUpsell $proUpsell = null;
 
     public function __construct(
         private readonly SettingsRepository $settings,
@@ -36,17 +35,12 @@ final class Settings implements HasHooks
     ) {
     }
 
-    private function proUpsell(): ProUpsell
-    {
-        return $this->proUpsell ??= new ProUpsell();
-    }
 
     public function registerHooks(): void
     {
         add_action('admin_menu', [$this, 'registerMenu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_filter('plugin_action_links_' . plugin_basename(\Customs\PLUGIN_FILE), [$this, 'actionLinks']);
-        $this->proUpsell()->registerHooks();
     }
 
     public function registerMenu(): void
@@ -113,8 +107,6 @@ final class Settings implements HasHooks
         <div class="wrap customs-settings">
             <h1><?php echo esc_html__('EU Import Duty', 'plogins-customs'); ?></h1>
 
-            <?php $this->proUpsell()->banner(); ?>
-
             <p class="description">
                 <?php echo esc_html__('From 1 July 2026 the EU charges a flat customs duty per tariff line on parcels up to the goods-value threshold shipped into the EU from outside it. This estimate is shown as its own pre-tax line at cart and checkout.', 'plogins-customs'); ?>
             </p>
@@ -125,7 +117,6 @@ final class Settings implements HasHooks
 
             <?php $this->renderOriginHint($s); ?>
 
-            <div class="customs-cols">
             <form method="post" action="">
                 <?php wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD); ?>
                 <table class="form-table" role="presentation">
@@ -218,11 +209,6 @@ final class Settings implements HasHooks
                 </table>
                 <?php submit_button(__('Save settings', 'plogins-customs')); ?>
             </form>
-
-                <?php $this->proUpsell()->aside(); ?>
-            </div>
-
-            <?php $this->proUpsell()->cards(); ?>
         </div>
         <?php
     }
