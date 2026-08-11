@@ -34,6 +34,8 @@ This is the WooCommerce equivalent of the import duty handling that hosted platf
 * **Source code** - [github.com/wppoland/plogins-customs](https://github.com/wppoland/plogins-customs)
 * **Bug reports and feature requests** - [GitHub issues](https://github.com/wppoland/plogins-customs/issues)
 
+Reporting a security issue: email hello@wppoland.com, and under our [coordinated disclosure policy](https://wppoland.com/en/security-policy/) we confirm within two business days, assess within five, and patch a critical issue within seven days of confirming it.
+
 == Translations ==
 
 Customs includes Polish, German and Spanish translations for the plugin interface. The text domain is `plogins-customs`, so WordPress.org language packs can also override or extend these bundled translations.
