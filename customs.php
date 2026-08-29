@@ -3,7 +3,7 @@
  * Plugin Name:       Customs - EU Import Duty for WooCommerce
  * Plugin URI:        https://plogins.com/plogins-customs/
  * Description:        Estimate and add the EU flat import duty (from 1 July 2026) as a clear checkout line for parcels shipped into the EU from outside it.
- * Version:           1.0.9
+ * Version:           1.0.10
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Requires Plugins:  woocommerce
@@ -14,7 +14,7 @@
  * Text Domain:       plogins-customs
  * Domain Path:       /languages
  * WC requires at least: 8.0
- * WC tested up to: 10.9
+ * WC tested up to: 11.0
  *
  * @package Customs
  */
