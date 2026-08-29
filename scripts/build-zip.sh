@@ -7,6 +7,17 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${1:-/tmp/customs-build}"
 STAGE="${OUT_DIR}/plogins-customs"
 
+# Header Version, the VERSION constant and the readme's Stable tag are three
+# copies of one number, and the constant is the one that drifts: 1.0.10 shipped
+# with it still reading 1.0.9. Refuse to package when they disagree.
+hdr=$(grep -m1 -E '^ \* Version:' "${ROOT_DIR}/customs.php" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+cst=$(grep -m1 -E "^const VERSION" "${ROOT_DIR}/customs.php" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+tag=$(grep -m1 -E '^Stable tag:' "${ROOT_DIR}/readme.txt" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+if [ "${hdr}" != "${cst}" ] || [ "${hdr}" != "${tag}" ]; then
+    echo "version mismatch: header=${hdr} const=${cst} stable-tag=${tag}" >&2
+    exit 1
+fi
+
 rm -rf "${OUT_DIR}"
 mkdir -p "${STAGE}"
 

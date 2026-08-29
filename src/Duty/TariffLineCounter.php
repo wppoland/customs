@@ -18,7 +18,9 @@ defined('ABSPATH') || exit;
  *
  *   1. an explicit tariff code set on the product or variation
  *      (meta key _customs_tariff_code), when present;
- *   2. otherwise, the product's first assigned category (default basis); or
+ *   2. otherwise, the TOP-LEVEL category the product sits under (default
+ *      basis), so Books > Health and Books > Self improvement are one line
+ *      rather than two; or
  *   3. otherwise, the product itself (product basis, or category fallback when
  *      a product has no category).
  *
@@ -74,13 +76,31 @@ final class TariffLineCounter
      */
     private function lineKey(\WC_Product $product, string $basis): string
     {
+        $key = $this->resolveKey($product, $basis);
+
+        /**
+         * Filters the grouping key for a single cart line.
+         *
+         * Two products that resolve to the same key count as one tariff line.
+         * Use this to classify by something the plugin does not know about, such
+         * as a real HS heading held in another plugin's meta.
+         *
+         * @param string      $key     The resolved grouping key.
+         * @param \WC_Product $product The product being keyed.
+         * @param string      $basis   The active count basis (category|product).
+         */
+        return (string) apply_filters('customs/tariff_line_key', $key, $product, $basis);
+    }
+
+    private function resolveKey(\WC_Product $product, string $basis): string
+    {
         $code = $this->explicitCode($product);
         if ('' !== $code) {
             return 'code:' . $code;
         }
 
         if (SettingsRepository::BASIS_CATEGORY === $basis) {
-            $category = $this->firstCategoryId($product);
+            $category = $this->groupCategoryId($product);
             if ($category > 0) {
                 return 'cat:' . $category;
             }
@@ -115,9 +135,16 @@ final class TariffLineCounter
     }
 
     /**
-     * First category id assigned to the product (or its parent for variations).
+     * Top-level category the product groups under.
+     *
+     * Every assigned category is walked up to its own top-level ancestor, and
+     * the lowest of those ids wins. Two things follow, both of them the point:
+     * a shop whose books live in Books > Health and Books > Self improvement
+     * gets one line rather than two, and the answer does not depend on which
+     * term WooCommerce happens to return first or on whether the merchant also
+     * ticked the parent category.
      */
-    private function firstCategoryId(\WC_Product $product): int
+    private function groupCategoryId(\WC_Product $product): int
     {
         $ids = $product->get_category_ids();
         if (empty($ids) && $product->get_parent_id() > 0) {
@@ -127,6 +154,41 @@ final class TariffLineCounter
             }
         }
 
-        return ! empty($ids) ? (int) reset($ids) : 0;
+        $tops = [];
+
+        foreach ($ids as $id) {
+            $top = $this->topAncestorId((int) $id);
+            if ($top > 0) {
+                $tops[] = $top;
+            }
+        }
+
+        if ([] === $tops) {
+            return 0;
+        }
+
+        sort($tops, SORT_NUMERIC);
+
+        return (int) $tops[0];
+    }
+
+    /**
+     * The outermost ancestor of a product category, or the term itself when it
+     * is already top level.
+     */
+    private function topAncestorId(int $termId): int
+    {
+        if ($termId <= 0) {
+            return 0;
+        }
+
+        $ancestors = get_ancestors($termId, 'product_cat', 'taxonomy');
+
+        // get_ancestors() returns nearest first, so the outermost is last.
+        if (is_array($ancestors) && [] !== $ancestors) {
+            return (int) end($ancestors);
+        }
+
+        return $termId;
     }
 }

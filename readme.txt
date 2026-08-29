@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.10
+Stable tag: 1.0.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ What it does:
 
 * Adds an "EU import duty (estimate)" fee at cart and checkout using the native WooCommerce fees API
 * Calculates the duty as the number of distinct tariff lines in the cart multiplied by your per-line amount
-* Counts tariff lines from a per-product tariff code, falling back to the product category, then the product
+* Counts tariff lines from a per-product tariff code, falling back to the top-level product category, then the product
 * Works in the classic checkout and the Cart and Checkout Blocks, and is HPOS compatible
 * Per-line amount, threshold, store origin country, EUR conversion rate, tariff-line basis, fee label and taxable flag are all configurable
 * Adds taxes on top: the duty is shown as its own line in addition to VAT
@@ -45,7 +45,7 @@ Customs includes Polish, German and Spanish translations for the plugin interfac
 1. Install and activate WooCommerce.
 2. Install Customs and activate it.
 3. Open WooCommerce and then EU Import Duty, set your per-line amount and threshold, and confirm your store origin country.
-4. Assign tariff lines to products if you want finer control, otherwise each distinct product category counts as one line.
+4. Assign tariff codes to products if you want finer control, otherwise each distinct top-level product category counts as one line. Subcategories roll up to the category they sit under, so Books > Health and Books > Self improvement are one line, not two.
 
 == Frequently Asked Questions ==
 
@@ -53,7 +53,7 @@ Customs includes Polish, German and Spanish translations for the plugin interfac
 Only for orders shipping to an EU country from a store based outside the EU, with a goods value at or below your threshold (150 EUR by default). Intra-EU orders are excluded.
 
 = How is the duty calculated? =
-The number of distinct tariff lines in the cart multiplied by your per-line amount (3 EUR by default). A parcel of one product type is one line; a parcel spanning several distinct categories counts as several lines.
+The number of distinct tariff lines in the cart multiplied by your per-line amount (3 EUR by default). A parcel of one product type is one line; a parcel spanning several distinct top-level categories counts as several lines. Subcategories count under their parent.
 
 = Does it work with the Cart and Checkout Blocks? =
 Yes. The duty is added through the native WooCommerce fees API, so it appears in both the classic checkout and the Blocks checkout, and it is HPOS compatible.
@@ -76,6 +76,11 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.11 =
+* Fixed: subcategories were counted as separate tariff lines. A cart holding a book from Books > Health and a book from Books > Self improvement was charged two lines instead of one, because the count used whichever category WooCommerce returned first and never looked at the category it sits under. Every assigned category is now resolved to its own top-level parent, so the charge no longer depends on how deep a shop's categories go or on whether the parent category was ticked as well.
+* Fixed: the plugin reported 1.0.9 as its own version while its header said 1.0.10. The build now refuses to package when the header, the version constant and the readme's stable tag disagree.
+* Added: a `customs/tariff_line_key` filter, for classifying a product by something the plugin does not know about, such as a real HS heading held in another plugin's meta.
 
 = 1.0.10 =
 * Declared compatibility with WooCommerce 11.0.
