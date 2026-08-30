@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Customs\Admin;
 
 use Customs\Contract\HasHooks;
+use Customs\Duty\TariffLineCounter;
 use Customs\Geo\EuMembership;
 use Customs\Settings\SettingsRepository;
 
@@ -188,6 +189,16 @@ final class Settings implements HasHooks
                                     <?php echo esc_html__('One line per distinct product', 'plogins-customs'); ?>
                                 </label>
                                 <p class="description"><?php echo esc_html__('A tariff code set on a product always overrides this; products sharing a code count as one line.', 'plogins-customs'); ?></p>
+                                <p style="margin-top:0.75em;">
+                                    <label>
+                                        <input type="checkbox" name="group_subcategories" value="1" <?php checked(! empty($s['group_subcategories'])); ?> />
+                                        <?php echo esc_html__('Count a subcategory under the category it sits in', 'plogins-customs'); ?>
+                                    </label>
+                                </p>
+                                <p class="description">
+                                    <?php echo esc_html__('Off: Other Products > Beads and Other Products > Pictures count as two lines. On: Books > Health and Books > Self improvement count as one. Which one is right depends on what your categories mean, so it is a choice rather than a rule. Give the products a tariff code and neither setting applies to them.', 'plogins-customs'); ?>
+                                </p>
+                                <?php $this->renderTariffCodeCoverage(); ?>
                             </fieldset>
                         </td>
                     </tr>
@@ -250,6 +261,64 @@ final class Settings implements HasHooks
         update_option(SettingsRepository::OPTION, $this->settings->normalize($raw));
 
         return true;
+    }
+
+    /**
+     * How many published products carry a tariff code the plugin can read.
+     *
+     * Worth showing, because "we entered the HS codes and nothing changed" is
+     * indistinguishable from "the plugin cannot see them" without it: the field
+     * lives on the Shipping tab, which WooCommerce hides for virtual products,
+     * and a code typed into some other plugin's field is invisible here.
+     */
+    private function renderTariffCodeCoverage(): void
+    {
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- one admin-screen count, not worth a transient
+        $published = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status = %s",
+                'product',
+                'publish',
+            )
+        );
+
+        if ($published < 1) {
+            return;
+        }
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- as above
+        $coded = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+                 INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
+                 WHERE p.post_type = %s AND p.post_status = %s
+                   AND m.meta_key = %s AND m.meta_value <> ''",
+                'product',
+                'publish',
+                TariffLineCounter::META_KEY,
+            )
+        );
+
+        printf(
+            '<p class="description" style="margin-top:0.75em;"><strong>%s</strong></p>',
+            esc_html(
+                sprintf(
+                    /* translators: 1: products carrying a tariff code, 2: published products */
+                    __('Tariff codes found on %1$d of %2$d published products.', 'plogins-customs'),
+                    $coded,
+                    $published,
+                )
+            )
+        );
+
+        if ($coded < $published) {
+            printf(
+                '<p class="description">%s</p>',
+                esc_html__('The rest fall back to the category rule above. The field is called "Customs tariff code" and sits on the product\'s Shipping tab, which WooCommerce hides for products marked Virtual, and a code held in another plugin\'s field is not read here.', 'plogins-customs')
+            );
+        }
     }
 
     /**

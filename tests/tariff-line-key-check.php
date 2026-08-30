@@ -39,11 +39,16 @@ function wc_get_product($id)
     return null;
 }
 
+$GLOBALS['group_subcategories'] = false;
+
 function get_option(string $name, $default = false)
 {
-    // SettingsRepository is final, so the basis is fed through the option it
-    // actually reads rather than through a subclass.
-    return ['count_basis' => 'category'];
+    // SettingsRepository is final, so the settings are fed through the option
+    // it actually reads rather than through a subclass.
+    return [
+        'count_basis'         => 'category',
+        'group_subcategories' => $GLOBALS['group_subcategories'],
+    ];
 }
 
 abstract class WC_Product_Stub
@@ -111,9 +116,21 @@ $assert = static function (string $label, int $got, int $want): void {
     printf("ok   %s (%d)\n", $label, $got);
 };
 
-// The reported case: two books in two subcategories of Books.
+// Reported August 2026, one shop, two categories, opposite expectations.
+// Off by default: sibling subcategories are separate lines.
 $assert(
-    'two subcategories of one parent are one line',
+    'Other Products > Beads and > Pictures are two lines by default',
+    $counter->count(new WC_Cart([
+        new WC_Product(1, [11]),
+        new WC_Product(2, [12]),
+    ])),
+    2,
+);
+
+// Turned on: they roll up to the category they sit in.
+$GLOBALS['group_subcategories'] = true;
+$assert(
+    'Books > Health and > Self improvement are one line when grouping is on',
     $counter->count(new WC_Cart([
         new WC_Product(1, [11]),
         new WC_Product(2, [12]),
@@ -121,9 +138,9 @@ $assert(
     1,
 );
 
-// Different top-level categories still count separately.
+// Grouping must not merge unrelated trees.
 $assert(
-    'different top-level categories are separate lines',
+    'different top-level categories stay separate while grouping is on',
     $counter->count(new WC_Cart([
         new WC_Product(1, [11]),
         new WC_Product(3, [21]),
@@ -131,7 +148,7 @@ $assert(
     2,
 );
 
-// The answer must not depend on the merchant also ticking the parent term.
+// And the answer must not depend on whether the parent was ticked as well.
 $assert(
     'ticking the parent as well changes nothing',
     $counter->count(new WC_Cart([
@@ -140,8 +157,10 @@ $assert(
     ])),
     1,
 );
+$GLOBALS['group_subcategories'] = false;
 
-// A shared tariff code overrides categories entirely.
+// A tariff code beats the categories in either mode. This is the path that
+// matters: it is the only one that can serve both shops at once.
 $assert(
     'a shared tariff code collapses unrelated categories',
     $counter->count(new WC_Cart([
@@ -150,5 +169,25 @@ $assert(
     ])),
     1,
 );
+
+$assert(
+    'different tariff codes split one category',
+    $counter->count(new WC_Cart([
+        new WC_Product(1, [11], '7018'),
+        new WC_Product(2, [11], '4911'),
+    ])),
+    2,
+);
+
+$GLOBALS['group_subcategories'] = true;
+$assert(
+    'different tariff codes split even while grouping is on',
+    $counter->count(new WC_Cart([
+        new WC_Product(1, [11], '7018'),
+        new WC_Product(2, [12], '4911'),
+    ])),
+    2,
+);
+$GLOBALS['group_subcategories'] = false;
 
 echo "all tariff-line grouping checks passed\n";

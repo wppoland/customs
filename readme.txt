@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.11
+Stable tag: 1.0.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ What it does:
 
 * Adds an "EU import duty (estimate)" fee at cart and checkout using the native WooCommerce fees API
 * Calculates the duty as the number of distinct tariff lines in the cart multiplied by your per-line amount
-* Counts tariff lines from a per-product tariff code, falling back to the top-level product category, then the product
+* Counts tariff lines from a per-product tariff code, falling back to the product category, then the product
 * Works in the classic checkout and the Cart and Checkout Blocks, and is HPOS compatible
 * Per-line amount, threshold, store origin country, EUR conversion rate, tariff-line basis, fee label and taxable flag are all configurable
 * Adds taxes on top: the duty is shown as its own line in addition to VAT
@@ -45,7 +45,7 @@ Customs includes Polish, German and Spanish translations for the plugin interfac
 1. Install and activate WooCommerce.
 2. Install Customs and activate it.
 3. Open WooCommerce and then EU Import Duty, set your per-line amount and threshold, and confirm your store origin country.
-4. Assign tariff codes to products if you want finer control, otherwise each distinct top-level product category counts as one line. Subcategories roll up to the category they sit under, so Books > Health and Books > Self improvement are one line, not two.
+4. Assign tariff codes to products if you want finer control, otherwise each distinct product category counts as one line. If your subcategories are variations on one thing, tick "Count a subcategory under the category it sits in" and Books > Health and Books > Self improvement become one line instead of two.
 
 == Frequently Asked Questions ==
 
@@ -53,7 +53,7 @@ Customs includes Polish, German and Spanish translations for the plugin interfac
 Only for orders shipping to an EU country from a store based outside the EU, with a goods value at or below your threshold (150 EUR by default). Intra-EU orders are excluded.
 
 = How is the duty calculated? =
-The number of distinct tariff lines in the cart multiplied by your per-line amount (3 EUR by default). A parcel of one product type is one line; a parcel spanning several distinct top-level categories counts as several lines. Subcategories count under their parent.
+The number of distinct tariff lines in the cart multiplied by your per-line amount (3 EUR by default). A parcel of one product type is one line; a parcel spanning several distinct categories counts as several lines. Whether a subcategory counts on its own or under its parent is a setting, and a tariff code overrides both.
 
 = Does it work with the Cart and Checkout Blocks? =
 Yes. The duty is added through the native WooCommerce fees API, so it appears in both the classic checkout and the Blocks checkout, and it is HPOS compatible.
@@ -76,6 +76,10 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.12 =
+* Fixed: 1.0.11 made every subcategory count under its parent, which was wrong for as many shops as it was right for. A shop selling Books > Health and Books > Self improvement wants one tariff line; a shop selling Other Products > Beads and Other Products > Pictures wants two. The category tree carries nothing that tells those two apart, so 1.0.11 quietly halved the second shop's duty. Grouping is now a setting, off by default, which restores what 1.0.10 did for anyone who did not want it.
+* Added: the settings screen now reports how many published products carry a tariff code the plugin can actually read. Entering codes and seeing nothing change is otherwise indistinguishable from the plugin not seeing them: the field sits on the product's Shipping tab, which WooCommerce hides for virtual products, and a code held in another plugin's field is not read here.
 
 = 1.0.11 =
 * Fixed: subcategories were counted as separate tariff lines. A cart holding a book from Books > Health and a book from Books > Self improvement was charged two lines instead of one, because the count used whichever category WooCommerce returned first and never looked at the category it sits under. Every assigned category is now resolved to its own top-level parent, so the charge no longer depends on how deep a shop's categories go or on whether the parent category was ticked as well.

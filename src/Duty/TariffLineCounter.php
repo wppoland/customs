@@ -18,9 +18,8 @@ defined('ABSPATH') || exit;
  *
  *   1. an explicit tariff code set on the product or variation
  *      (meta key _customs_tariff_code), when present;
- *   2. otherwise, the TOP-LEVEL category the product sits under (default
- *      basis), so Books > Health and Books > Self improvement are one line
- *      rather than two; or
+ *   2. otherwise, the product's assigned category (default basis), or the
+ *      top-level category it sits under when the merchant has asked for that; or
  *   3. otherwise, the product itself (product basis, or category fallback when
  *      a product has no category).
  *
@@ -135,14 +134,20 @@ final class TariffLineCounter
     }
 
     /**
-     * Top-level category the product groups under.
+     * The category a product groups under.
      *
-     * Every assigned category is walked up to its own top-level ancestor, and
-     * the lowest of those ids wins. Two things follow, both of them the point:
-     * a shop whose books live in Books > Health and Books > Self improvement
-     * gets one line rather than two, and the answer does not depend on which
-     * term WooCommerce happens to return first or on whether the merchant also
-     * ticked the parent category.
+     * By default this is the assigned category itself, so Other Products >
+     * Beads and Other Products > Pictures count as two lines. Turn on
+     * "group subcategories" and each assigned category is walked up to its own
+     * top-level ancestor instead, so Books > Health and Books > Self
+     * improvement count as one.
+     *
+     * Both readings are right for some shop and wrong for another, and the
+     * taxonomy carries nothing that tells them apart, which is why this is a
+     * setting rather than a rule, and why a tariff code beats it either way.
+     *
+     * Whichever mode is on, the lowest id wins, so the answer does not depend
+     * on which term WooCommerce happens to return first.
      */
     private function groupCategoryId(\WC_Product $product): int
     {
@@ -154,22 +159,23 @@ final class TariffLineCounter
             }
         }
 
-        $tops = [];
+        $roll = $this->settings->groupSubcategories();
+        $keys = [];
 
         foreach ($ids as $id) {
-            $top = $this->topAncestorId((int) $id);
-            if ($top > 0) {
-                $tops[] = $top;
+            $key = $roll ? $this->topAncestorId((int) $id) : (int) $id;
+            if ($key > 0) {
+                $keys[] = $key;
             }
         }
 
-        if ([] === $tops) {
+        if ([] === $keys) {
             return 0;
         }
 
-        sort($tops, SORT_NUMERIC);
+        sort($keys, SORT_NUMERIC);
 
-        return (int) $tops[0];
+        return (int) $keys[0];
     }
 
     /**

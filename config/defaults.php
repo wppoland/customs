@@ -32,6 +32,12 @@ return [
     // the product or its category: 'category' (default, one line per distinct
     // product category) or 'product' (one line per distinct product).
     'count_basis'    => 'category',
+    // Whether a subcategory counts under the category it sits in. Off by
+    // default because it cuts both ways: a shop whose Books split into Health
+    // and Self improvement wants one line, and a shop whose Other Products
+    // split into Beads and Pictures wants two, and the taxonomy cannot tell
+    // the two apart. A tariff code can, and always wins over either.
+    'group_subcategories' => false,
     // Customer-facing label for the duty line on cart, checkout and order.
     'label'          => 'EU import duty (estimate)',
     // Whether WooCommerce should apply tax on top of the duty fee. The duty is

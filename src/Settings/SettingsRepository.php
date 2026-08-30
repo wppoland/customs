@@ -71,6 +71,14 @@ final class SettingsRepository
         return strtoupper((string) ($base['country'] ?? ''));
     }
 
+    /**
+     * Whether a subcategory should count under the category it sits in.
+     */
+    public function groupSubcategories(): bool
+    {
+        return ! empty($this->settings()['group_subcategories']);
+    }
+
     public function countBasis(): string
     {
         $basis = (string) ($this->settings()['count_basis'] ?? self::BASIS_CATEGORY);
@@ -136,6 +144,7 @@ final class SettingsRepository
             'eur_rate'       => $rate > 0 ? $rate : 1.0,
             'origin_country' => $origin,
             'count_basis'    => $basis,
+            'group_subcategories' => ! empty($raw['group_subcategories']),
             'label'          => sanitize_text_field((string) ($raw['label'] ?? '')),
             'taxable'        => ! empty($raw['taxable']),
         ];
