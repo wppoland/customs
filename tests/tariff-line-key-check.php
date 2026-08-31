@@ -190,4 +190,18 @@ $assert(
 );
 $GLOBALS['group_subcategories'] = false;
 
+// Reported by the audit, not by a user, and it would have been: with grouping
+// OFF a product carrying two categories must key on the one WooCommerce hands
+// over first, exactly as 1.0.10 did. Keying on the lowest term id instead
+// merges carts that used to count separately, and halves the duty, without any
+// setting being touched.
+$assert(
+    'two multi-category products key on their first category, not the lowest id',
+    $counter->count(new WC_Cart([
+        new WC_Product(1, [11, 20]),
+        new WC_Product(2, [20, 11]),
+    ])),
+    2,
+);
+
 echo "all tariff-line grouping checks passed\n";

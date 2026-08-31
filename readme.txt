@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.12
+Stable tag: 1.0.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,11 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.13 =
+* Fixed: the subcategory grouping checkbox added in 1.0.12 could not be saved. The field was drawn on the settings screen but its name was missing from the list the save routine reads, so ticking it and pressing save left it unticked, every time. If you tried to use it after updating to 1.0.12 and concluded it did nothing, it really did nothing, and this release is the one that makes it work.
+* Fixed: with grouping off, 1.0.12 did not behave like 1.0.10 as its changelog claimed. It picked the category with the lowest internal id instead of the first one WooCommerce returns, which is a different answer for any product filed in more than one category, and could merge two tariff lines into one and halve the duty on a shop that never touched the new setting. The old behaviour is back.
+* Fixed: the tariff-code coverage line on the settings screen counted a code consisting only of spaces as present, while the duty calculation trims it and ignores it. The two now agree.
 
 = 1.0.12 =
 * Fixed: 1.0.11 made every subcategory count under its parent, which was wrong for as many shops as it was right for. A shop selling Books > Health and Books > Self improvement wants one tariff line; a shop selling Other Products > Beads and Other Products > Pictures wants two. The category tree carries nothing that tells those two apart, so 1.0.11 quietly halved the second shop's duty. Grouping is now a setting, off by default, which restores what 1.0.10 did for anyone who did not want it.

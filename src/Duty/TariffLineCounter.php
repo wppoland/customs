@@ -159,23 +159,33 @@ final class TariffLineCounter
             }
         }
 
-        $roll = $this->settings->groupSubcategories();
-        $keys = [];
+        if (! $this->settings->groupSubcategories()) {
+            // The assigned category as WooCommerce hands it over. Not the lowest
+            // id: 1.0.10 used the first and 1.0.12 quietly switched to the
+            // lowest, which is a different answer for any product carrying more
+            // than one category, so a shop that never touched the new setting
+            // still had its duty change under it.
+            return (int) reset($ids);
+        }
+
+        $tops = [];
 
         foreach ($ids as $id) {
-            $key = $roll ? $this->topAncestorId((int) $id) : (int) $id;
-            if ($key > 0) {
-                $keys[] = $key;
+            $top = $this->topAncestorId((int) $id);
+            if ($top > 0) {
+                $tops[] = $top;
             }
         }
 
-        if ([] === $keys) {
+        if ([] === $tops) {
             return 0;
         }
 
-        sort($keys, SORT_NUMERIC);
+        // Here the lowest id is deliberate: several assigned categories can roll
+        // up to different ancestors, and the answer must not depend on term order.
+        sort($tops, SORT_NUMERIC);
 
-        return (int) $keys[0];
+        return (int) $tops[0];
     }
 
     /**

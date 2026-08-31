@@ -256,6 +256,12 @@ final class Settings implements HasHooks
             'count_basis'    => isset($_POST['count_basis']) ? sanitize_text_field(wp_unslash($_POST['count_basis'])) : SettingsRepository::BASIS_CATEGORY,
             'label'          => isset($_POST['label']) ? sanitize_text_field(wp_unslash($_POST['label'])) : '',
             'taxable'        => isset($_POST['taxable']),
+            // Every checkbox on this form has to be listed here or it can never
+            // be saved: normalize() reads this array, not $_POST, so a key that
+            // is missing reads as false and is written back over whatever was
+            // stored. 1.0.12 shipped the subcategory checkbox without this line
+            // and it was impossible to tick.
+            'group_subcategories' => isset($_POST['group_subcategories']),
         ];
 
         update_option(SettingsRepository::OPTION, $this->settings->normalize($raw));
@@ -294,7 +300,7 @@ final class Settings implements HasHooks
                 "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
                  INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
                  WHERE p.post_type = %s AND p.post_status = %s
-                   AND m.meta_key = %s AND m.meta_value <> ''",
+                   AND m.meta_key = %s AND TRIM(m.meta_value) <> ''",
                 'product',
                 'publish',
                 TariffLineCounter::META_KEY,
