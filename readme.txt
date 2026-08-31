@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.13
+Stable tag: 1.0.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,9 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.14 =
+* Fixed: the package no longer ships its own translation files. WordPress.org builds language packs from translate.wordpress.org, and a bundled catalogue shadows that pack, so a translation corrected upstream could not reach you until the next release. Your language now comes from the language pack, which is the copy that stays current.
 
 = 1.0.13 =
 * Fixed: the subcategory grouping checkbox added in 1.0.12 could not be saved. The field was drawn on the settings screen but its name was missing from the list the save routine reads, so ticking it and pressing save left it unticked, every time. If you tried to use it after updating to 1.0.12 and concluded it did nothing, it really did nothing, and this release is the one that makes it work.
