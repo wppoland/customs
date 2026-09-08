@@ -4,7 +4,7 @@ Tags: woocommerce, import duty, customs, eu, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.14
+Stable tag: 1.0.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,9 @@ Yes. This plugin is compatible with WordPress Multisite. Network activate it or 
 3. The same duty line in the cart on mobile.
 
 == Changelog ==
+
+= 1.0.15 =
+* Fixed: the checkout line label was stuck in English. The packaged default "EU import duty (estimate)" lived in a config array rather than in a translation call, so it never reached the translation catalogue and no language pack could touch it, and the moment you saved the settings screen that English text was written into your database for good. The default is now a translatable string, so it follows the site language as soon as a translation for it exists. Translations come from WordPress.org language packs and are not bundled here, so the line stays English until a pack is published. If your stored label is still the untouched English default, this update clears it so the translated one takes over; a label you wrote yourself, including your own translation of that sentence, is left exactly as you typed it. The field on the settings screen now shows the translated default as a placeholder, and leaving it empty is what keeps it translated.
 
 = 1.0.14 =
 * Fixed: the package no longer ships its own translation files. WordPress.org builds language packs from translate.wordpress.org, and a bundled catalogue shadows that pack, so a translation corrected upstream could not reach you until the next release. Your language now comes from the language pack, which is the copy that stays current.

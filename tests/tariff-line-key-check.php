@@ -36,7 +36,34 @@ function apply_filters(string $hook, $value, ...$args)
 
 function wc_get_product($id)
 {
+    global $product_stubs;
+    foreach ($product_stubs ?? [] as $p) {
+        if ($p->get_id() === (int) $id) {
+            return $p;
+        }
+    }
+
     return null;
+}
+
+$GLOBALS['product_meta'] = [];
+
+function get_post_meta($post_id, $key = '', $single = false)
+{
+    $pid = (int) $post_id;
+    $all = $GLOBALS['product_meta'][$pid] ?? [];
+    if ('' === $key) {
+        return $all;
+    }
+    if (! isset($all[$key])) {
+        return $single ? '' : [];
+    }
+    $values = $all[$key];
+    if ($single) {
+        return is_array($values) ? reset($values) : $values;
+    }
+
+    return is_array($values) ? $values : [$values];
 }
 
 $GLOBALS['group_subcategories'] = false;
@@ -60,6 +87,16 @@ abstract class WC_Product_Stub
         private string $code = '',
         private int $parent = 0,
     ) {
+        global $product_stubs;
+        if (! isset($product_stubs)) {
+            $product_stubs = [];
+        }
+        $product_stubs[$this->id] = $this;
+
+        if ('' !== $this->code) {
+            $GLOBALS['product_meta'][$this->id] = $GLOBALS['product_meta'][$this->id] ?? [];
+            $GLOBALS['product_meta'][$this->id]['_customs_tariff_code'] = $this->code;
+        }
     }
 
     public function get_id(): int
@@ -205,3 +242,77 @@ $assert(
 );
 
 echo "all tariff-line grouping checks passed\n";
+
+echo "\n--- user-reported scenario: Books > Health + Books > Self improvement ---\n";
+
+$scenarioA = $counter->count(new WC_Cart([
+    new WC_Product(101, [11], '4901'),
+    new WC_Product(102, [12], '4901'),
+]));
+$assert(
+    'exact user scenario: Books > Health + Books > Self improvement with same HS code = 1 line',
+    $scenarioA,
+    1,
+);
+
+$scenarioB = $counter->count(new WC_Cart([
+    new WC_Product(103, [11]),
+    new WC_Product(104, [12]),
+]));
+$assert(
+    'same books without HS code, grouping OFF = 2 lines (default behaviour)',
+    $scenarioB,
+    2,
+);
+
+$GLOBALS['group_subcategories'] = true;
+$scenarioC = $counter->count(new WC_Cart([
+    new WC_Product(105, [11]),
+    new WC_Product(106, [12]),
+]));
+$assert(
+    'same books without HS code, grouping ON = 1 line (workaround when codes not used)',
+    $scenarioC,
+    1,
+);
+$GLOBALS['group_subcategories'] = false;
+
+echo "\n--- tariff code normalisation: formatting differences must not split lines ---\n";
+
+$assert(
+    '"4901.90" and "4901-90" are the same code',
+    $counter->count(new WC_Cart([
+        new WC_Product(201, [11], '4901.90'),
+        new WC_Product(202, [12], '4901-90'),
+    ])),
+    1,
+);
+
+$assert(
+    '" 4901 90 00 " and "4901.90.00" are the same code',
+    $counter->count(new WC_Cart([
+        new WC_Product(203, [11], ' 4901 90 00 '),
+        new WC_Product(204, [12], '4901.90.00'),
+    ])),
+    1,
+);
+
+$assert(
+    '"4901" and "4901.90" are still two different codes',
+    $counter->count(new WC_Cart([
+        new WC_Product(205, [11], '4901'),
+        new WC_Product(206, [12], '4901.90'),
+    ])),
+    2,
+);
+
+$assert(
+    'mixed-case codes compare case-insensitively',
+    $counter->count(new WC_Cart([
+        new WC_Product(207, [11], 't-4901'),
+        new WC_Product(208, [12], 'T_4901'),
+    ])),
+    1,
+);
+
+echo "all user-scenario and normalisation checks passed\n";

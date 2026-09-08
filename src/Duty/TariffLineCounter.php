@@ -114,10 +114,22 @@ final class TariffLineCounter
 
     /**
      * Explicit tariff code stored on the variation or its parent product.
+     *
+     * Tries three lookup paths so that a code that was saved correctly is never
+     * missed:
+     *   1. the WC_Data meta API on the product/variation itself;
+     *   2. a direct get_post_meta() read for the same post id, bypassing any
+     *      CRUD filters or cached copies;
+     *   3. the same two reads on the parent variable product, when the item is
+     *      a variation and did not carry its own code.
+     *
+     * Whichever path returns a non-empty string wins. The returned value is
+     * normalised (trimmed, upper-cased, punctuation collapsed) so that
+     * "4901.90", "4901-90" and " 4901 90 " are treated as the same code.
      */
     private function explicitCode(\WC_Product $product): string
     {
-        $code = trim((string) $product->get_meta(self::META_KEY, true));
+        $code = $this->readNormalisedCode($product);
         if ('' !== $code) {
             return $code;
         }
@@ -126,9 +138,77 @@ final class TariffLineCounter
         if ($parent > 0) {
             $parentProduct = wc_get_product($parent);
             if ($parentProduct instanceof \WC_Product) {
-                $code = trim((string) $parentProduct->get_meta(self::META_KEY, true));
+                $code = $this->readNormalisedCode($parentProduct);
+                if ('' !== $code) {
+                    return $code;
+                }
             }
         }
+
+        return '';
+    }
+
+    /**
+     * Normalised tariff code for a single product, reading both the WC_Data
+     * meta API and the underlying post_meta table.
+     */
+    private function readNormalisedCode(\WC_Product $product): string
+    {
+        $readers = [
+            static fn (): string => trim((string) $product->get_meta(self::META_KEY, true)),
+            static function () use ($product): string {
+                $pid = $product->get_id();
+                if ($pid <= 0) {
+                    return '';
+                }
+                $raw = get_post_meta($pid, self::META_KEY, true);
+                if (! is_scalar($raw) && null !== $raw && ! is_array($raw)) {
+                    return '';
+                }
+                if (is_array($raw)) {
+                    $raw = reset($raw);
+                    if (! is_scalar($raw)) {
+                        return '';
+                    }
+                }
+                return trim((string) $raw);
+            },
+        ];
+
+        foreach ($readers as $read) {
+            $value = $read();
+            if ('' === $value) {
+                continue;
+            }
+            $normalised = $this->normaliseCode($value);
+            if ('' !== $normalised) {
+                return $normalised;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Canonical form for a tariff code so that formatting differences do not
+     * split what should be one grouping key.
+     *
+     * Upper-cased so codes are compared case-insensitively. Runs of anything
+     * that is not a letter or digit are collapsed to a single dot, because
+     * "4901.90.00", "4901-90-00" and "4901 90 00" all describe the same
+     * heading for the plugin's line-counting purposes. An empty result means
+     * the caller should fall back to the category/product key.
+     */
+    private function normaliseCode(string $code): string
+    {
+        $code = trim($code);
+        if ('' === $code) {
+            return '';
+        }
+
+        $code = strtoupper($code);
+        $code = preg_replace('/[^A-Z0-9]+/', '.', $code);
+        $code = trim((string) $code, '.');
 
         return $code;
     }
@@ -159,13 +239,21 @@ final class TariffLineCounter
             }
         }
 
+        if (empty($ids)) {
+            return 0;
+        }
+
         if (! $this->settings->groupSubcategories()) {
             // The assigned category as WooCommerce hands it over. Not the lowest
             // id: 1.0.10 used the first and 1.0.12 quietly switched to the
             // lowest, which is a different answer for any product carrying more
             // than one category, so a shop that never touched the new setting
-            // still had its duty change under it.
-            return (int) reset($ids);
+            // still had its duty change under it. array_values() first so that
+            // reset() on a numerically-sparse array does not pick an internal
+            // pointer state that a previous caller left behind.
+            $ordered = array_values($ids);
+
+            return (int) $ordered[0];
         }
 
         $tops = [];

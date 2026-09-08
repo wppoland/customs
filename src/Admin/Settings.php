@@ -7,6 +7,7 @@ namespace Customs\Admin;
 use Customs\Contract\HasHooks;
 use Customs\Duty\TariffLineCounter;
 use Customs\Geo\EuMembership;
+use Customs\Service\Texts;
 use Customs\Settings\SettingsRepository;
 
 defined('ABSPATH') || exit;
@@ -102,7 +103,11 @@ final class Settings implements HasHooks
         }
 
         $saved = $this->maybeSave();
-        $s     = $this->settings->settings();
+        // Raw, never the Texts-resolved values: a resolved label rendered as the
+        // field value would be saved straight back and freeze one language into
+        // the option. An empty field shows the translated default as a
+        // placeholder instead.
+        $s = $this->settings->rawSettings();
 
         ?>
         <div class="wrap customs-settings">
@@ -205,7 +210,8 @@ final class Settings implements HasHooks
                     <tr>
                         <th scope="row"><label for="customs_label"><?php echo esc_html__('Checkout line label', 'plogins-customs'); ?></label></th>
                         <td>
-                            <input type="text" id="customs_label" name="label" value="<?php echo esc_attr((string) $s['label']); ?>" class="regular-text" />
+                            <input type="text" id="customs_label" name="label" value="<?php echo esc_attr((string) $s['label']); ?>" placeholder="<?php echo esc_attr(Texts::defaults()['label']); ?>" class="regular-text" />
+                            <p class="description"><?php echo esc_html__('Leave empty to use the translated default shown in the field, so the line reads in the language of each shop.', 'plogins-customs'); ?></p>
                         </td>
                     </tr>
                     <tr>

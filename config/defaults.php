@@ -39,7 +39,12 @@ return [
     // the two apart. A tariff code can, and always wins over either.
     'group_subcategories' => false,
     // Customer-facing label for the duty line on cart, checkout and order.
-    'label'          => 'EU import duty (estimate)',
+    // Empty on purpose. A value here is not a gettext call, so it never reaches
+    // the .pot and no language pack can translate it, and once the settings
+    // screen is saved the English is frozen into the option. Empty means "use
+    // Customs\Service\Texts", which is translated; a merchant's own label still
+    // wins.
+    'label'          => '',
     // Whether WooCommerce should apply tax on top of the duty fee. The duty is
     // a customs charge, so the default is off (added as its own untaxed line).
     'taxable'        => false,

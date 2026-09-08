@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Customs\Settings;
 
+use Customs\Service\Texts;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -90,7 +92,7 @@ final class SettingsRepository
     {
         $label = trim((string) ($this->settings()['label'] ?? ''));
 
-        return '' !== $label ? $label : __('EU import duty (estimate)', 'plogins-customs');
+        return '' !== $label ? $label : Texts::defaults()['label'];
     }
 
     public function isTaxable(): bool
@@ -99,11 +101,27 @@ final class SettingsRepository
     }
 
     /**
-     * Settings array merged over packaged defaults.
+     * Settings array merged over packaged defaults, resolved for RENDERING.
+     *
+     * Texts::apply() only fills what the merchant left empty, and only here, on
+     * the way out. The admin screen must use rawSettings() instead: rendering
+     * the resolved text as a field value and saving it would write one language
+     * into the option, which is the bug Texts exists to fix.
      *
      * @return array<string, mixed>
      */
     public function settings(): array
+    {
+        return Texts::apply($this->rawSettings());
+    }
+
+    /**
+     * Settings exactly as stored, merged over packaged defaults, with the empty
+     * text keys left empty. For the admin form and anything that writes back.
+     *
+     * @return array<string, mixed>
+     */
+    public function rawSettings(): array
     {
         $stored = get_option(self::OPTION, []);
         if (! is_array($stored)) {
